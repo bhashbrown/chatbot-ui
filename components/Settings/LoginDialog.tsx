@@ -1,4 +1,5 @@
-import { FC, useContext, useEffect, useReducer, useRef, useState } from 'react';
+import { signIn } from 'next-auth/react';
+import { FC, MouseEventHandler, useContext, useState } from 'react';
 
 import { useTranslation } from 'next-i18next';
 
@@ -11,6 +12,7 @@ import { Settings } from '@/types/settings';
 import HomeContext from '@/pages/api/home/home.context';
 
 import Dialog from '../Dialog';
+import TextField from '../TextField';
 
 interface Props {
   open: boolean;
@@ -18,7 +20,7 @@ interface Props {
 }
 
 export const LoginDialog: FC<Props> = ({ open, onClose }) => {
-  const { t } = useTranslation('settings');
+  const { t } = useTranslation('login');
   const settings: Settings = getSettings();
   const { state, dispatch } = useCreateReducer<Settings>({
     initialState: settings,
@@ -26,68 +28,147 @@ export const LoginDialog: FC<Props> = ({ open, onClose }) => {
   const { dispatch: homeDispatch } = useContext(HomeContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [generalError, setGeneralError] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [variant, setVariant] = useState<'Login' | 'Sign Up'>('Sign Up');
 
-  // const handleSave = () => {
-  //   homeDispatch({ field: 'lightMode', value: state.theme });
-  //   saveSettings(state);
-  //   const isEmailValid = email.match(
-  //     /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/,
-  //   );
-  // };
+  const isEmailValid = (email: string) => {
+    if (!email) {
+      return false;
+    }
+
+    return email.match(
+      /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/,
+    );
+  };
+
+  const handleLogin: MouseEventHandler<HTMLButtonElement> = async (event) => {
+    event.preventDefault();
+    setIsProcessing(true);
+    setEmailError('');
+    setPasswordError('');
+    setGeneralError('');
+
+    if (!email) {
+      setIsProcessing(false);
+      return setEmailError(
+        t('Email address is required') || 'Email address is required',
+      );
+    }
+
+    if (!isEmailValid(email)) {
+      setIsProcessing(false);
+      return setEmailError(
+        t('Please enter a valid email address') ||
+          'Please enter a valid email address',
+      );
+    }
+
+    if (!password) {
+      setIsProcessing(false);
+      return setPasswordError(
+        t('Password is required') || 'Password is required',
+      );
+    }
+
+    try {
+      // create user if they don't exist
+
+      // login using credentials
+      const signInResponse = await signIn('credentials', {
+        redirect: false,
+        email,
+        password,
+      });
+      if (signInResponse?.error) {
+        setIsProcessing(false);
+        return setGeneralError(
+          t('Unable to log in. Either the email or password is incorrect.') ||
+            'Unable to log in. Either the email or password is incorrect.',
+        );
+      }
+      onClose();
+    } catch (error) {
+      console.error(error);
+      setIsProcessing(false);
+      setGeneralError(
+        t('There was an error while trying to login.') ||
+          'There was an error while trying to login.',
+      );
+    }
+  };
 
   return (
     <Dialog open={open} onClose={onClose}>
       <form>
         <div className="text-lg pb-4 font-bold text-black dark:text-neutral-200">
-          {t('Login')}
+          {t(variant)}
         </div>
+        {variant === 'Sign Up' ? (
+          <p className="text-black dark:text-neutral-200 mt-1 mb-7">
+            Create your account or{' '}
+            <button
+              className="underline"
+              onClick={(e) => {
+                e.preventDefault();
+                setVariant('Login');
+              }}
+              type="button"
+            >
+              sign into your existing account now.
+            </button>
+          </p>
+        ) : (
+          <p className="text-black dark:text-neutral-200 mt-1 mb-7">
+            Sign into your account or{' '}
+            <button
+              className="underline"
+              onClick={(e) => {
+                e.preventDefault();
+                setVariant('Sign Up');
+              }}
+              type="button"
+            >
+              create an account today.
+            </button>
+          </p>
+        )}
 
-        <label
-          className="text-sm font-bold text-black dark:text-neutral-200"
-          htmlFor="email-input"
-        >
-          {t('Email')}
-        </label>
-
-        <input
+        <TextField
           id="email-input"
           autoComplete="email"
-          className="w-full mt-2 mb-4 flex-1 rounded-md border border-neutral-600 bg-white dark:bg-[#202123] px-4 py-3 pr-10 text-[14px] leading-3
-							text-neutral-700 dark:text-neutral-200"
-          type="email"
-          placeholder="someone@example.com"
-          value={email}
+          error={!!emailError}
+          helperText={emailError}
+          label={t('Email') || 'Email'}
           onChange={(e) => setEmail(e.currentTarget.value)}
-        ></input>
-
-        <label
-          className="text-sm font-bold text-black dark:text-neutral-200"
-          htmlFor="password-input"
-        >
-          {t('Password')}
-        </label>
-
-        <input
+          placeholder="someone@example.com"
+          type="email"
+          value={email}
+        />
+        <TextField
           id="password-input"
-          autoComplete="current-password"
-          className="w-full mt-2 flex-1 rounded-md border border-neutral-600 bg-white dark:bg-[#202123] px-4 py-3 pr-10 text-[14px] leading-3
-							text-neutral-700 dark:text-neutral-200"
-          type="password"
-          placeholder="**********"
-          value={password}
+          autoComplete="password"
+          error={!!passwordError}
+          helperText={passwordError}
+          label={t('Password') || 'Password'}
           onChange={(e) => setPassword(e.currentTarget.value)}
-        ></input>
-
+          placeholder="**********"
+          type="password"
+          value={password}
+        />
         <button
-          type="button"
-          className="w-full px-4 py-2 mt-6 border rounded-lg shadow border-neutral-500 text-neutral-900 hover:bg-neutral-100 focus:outline-none dark:border-neutral-800 dark:border-opacity-50 dark:bg-white dark:text-black dark:hover:bg-neutral-300"
-          onClick={() => {
-            // handleSave();
-            onClose();
-          }}
+          type="submit"
+          className="w-full px-4 py-2 mt-2 mb-2 border rounded-lg shadow border-neutral-500 text-neutral-900 hover:bg-neutral-100 focus:outline-none dark:border-neutral-800 dark:border-opacity-50 dark:bg-white dark:text-black dark:hover:bg-neutral-300"
+          disabled={isProcessing}
+          onClick={handleLogin}
         >
-          {t('Login')}
+          {t(variant)}
         </button>
+        <p className="text-rose-500 mt-4 text-sm text-center">
+          {t(generalError)}
+        </p>
       </form>
     </Dialog>
   );

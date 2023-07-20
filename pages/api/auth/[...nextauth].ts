@@ -1,10 +1,14 @@
 import NextAuth, { NextAuthOptions } from 'next-auth';
+import type { Adapter } from 'next-auth/adapters';
 import CredentialsProvider from 'next-auth/providers/credentials';
+
+import prisma from '@/prisma/prisma';
+import { PrismaAdapter } from '@auth/prisma-adapter';
 
 export const authOptions: NextAuthOptions = {
   // This type assertion is needed to prevent a type error - https://github.com/nextauthjs/next-auth/issues/6106#issuecomment-1582582312
   // This is probably a bug since both packages are from NextAuth
-  // adapter: PrismaAdapter(prisma) as Adapter,
+  adapter: PrismaAdapter(prisma) as Adapter,
   session: {
     // Use JSON Web Tokens for session instead of database sessions.
     // This option can be used with or without a database for users/accounts.
@@ -40,26 +44,21 @@ export const authOptions: NextAuthOptions = {
 
         try {
           // find user with the same email address
-          // const user = await prisma.user.findFirst({
-          //   where: { email: sanitizedEmail },
-          // });
+          const user = await prisma.user.findFirst({
+            where: { email: sanitizedEmail },
+          });
 
           // return null if no user was found
-          // if (!user) {
-          //   console.error('No user found with this email address.');
-          //   return null;
-          // }
+          if (!user) {
+            console.error('No user found with this email address.');
+            return null;
+          }
 
           // verify that the encrypted password matches the password entered by the user
           // const isPasswordCorrect = await argon2.verify(
           //   user.password,
           //   password
           // );
-
-          // if email is not verified, send a confirmation code
-          // if (!user.emailVerified) {
-          //   await createAndSendEmailToken(sanitizedEmail);
-          // }
 
           // return isPasswordCorrect
           //   ? {

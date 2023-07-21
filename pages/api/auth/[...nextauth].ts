@@ -4,6 +4,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 
 import prisma from '@/prisma/prisma';
 import { PrismaAdapter } from '@auth/prisma-adapter';
+import argon2 from 'argon2';
 
 export const authOptions: NextAuthOptions = {
   // This type assertion is needed to prevent a type error - https://github.com/nextauthjs/next-auth/issues/6106#issuecomment-1582582312
@@ -55,19 +56,18 @@ export const authOptions: NextAuthOptions = {
           }
 
           // verify that the encrypted password matches the password entered by the user
-          // const isPasswordCorrect = await argon2.verify(
-          //   user.password,
-          //   password
-          // );
+          const isPasswordCorrect = await argon2.verify(
+            user.password,
+            password,
+          );
 
-          // return isPasswordCorrect
-          //   ? {
-          //       id: user.id,
-          //       name: `${user.firstName} ${user.lastName}`,
-          //       email: user.email,
-          //     }
-          //   : null;
-          return null;
+          return isPasswordCorrect
+            ? {
+                id: user.id,
+                name: user.email,
+                email: user.email,
+              }
+            : null;
         } catch (error) {
           console.error(error);
           return null;

@@ -7,6 +7,7 @@ import { useCreateReducer } from '@/hooks/useCreateReducer';
 
 import { getSettings, saveSettings } from '@/utils/app/settings';
 
+import { SignUpBody } from '@/types/auth';
 import { Settings } from '@/types/settings';
 
 import HomeContext from '@/pages/api/home/home.context';
@@ -74,7 +75,24 @@ export const LoginDialog: FC<Props> = ({ open, onClose }) => {
     }
 
     try {
+      const signUpBody: SignUpBody = { email, password };
       // create user if they don't exist
+      const signUpResponse = await fetch('/api/sign-up', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(signUpBody),
+      });
+
+      if (!signUpResponse?.ok) {
+        setIsProcessing(false);
+        setGeneralError(
+          t('There was an error while trying to sign up.') ||
+            'There was an error while trying to sign up.',
+        );
+        return;
+      }
 
       // login using credentials
       const signInResponse = await signIn('credentials', {

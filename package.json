@@ -17,6 +17,7 @@
     "@dqbd/tiktoken": "^1.0.2",
     "@prisma/client": "^5.0.0",
     "@tabler/icons-react": "^2.9.0",
+    "argon2": "^0.30.3",
     "eventsource-parser": "^0.1.0",
     "i18next": "^22.4.13",
     "next": "13.2.4",

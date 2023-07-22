@@ -1,11 +1,13 @@
 import { IconFileExport, IconSettings, IconUser } from '@tabler/icons-react';
-import { useContext, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { useContext, useEffect, useState } from 'react';
 
 import { useTranslation } from 'next-i18next';
 
 import HomeContext from '@/pages/api/home/home.context';
 
 import { LoginDialog } from '@/components/Settings/LoginDialog';
+import { LogoutDialog } from '@/components/Settings/LogoutDialog';
 import { SettingDialog } from '@/components/Settings/SettingDialog';
 
 import { Import } from '../../Settings/Import';
@@ -17,8 +19,10 @@ import { PluginKeys } from './PluginKeys';
 
 export const ChatbarSettings = () => {
   const { t } = useTranslation('sidebar');
+  const { data: session, status } = useSession();
   const [isSettingDialogOpen, setIsSettingDialog] = useState<boolean>(false);
-  const [isLoginDialogOpen, setIsLoginDialog] = useState<boolean>(true);
+  const [isLoginDialogOpen, setIsLoginDialog] = useState<boolean>(false);
+  const [isLogoutDialogOpen, setIsLogoutDialog] = useState<boolean>(false);
 
   const {
     state: {
@@ -38,13 +42,27 @@ export const ChatbarSettings = () => {
     handleApiKeyChange,
   } = useContext(ChatbarContext);
 
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      setIsLoginDialog(true);
+    }
+  }, [status]);
+
   return (
     <div className="flex flex-col items-center space-y-1 border-t border-white/20 pt-1 text-sm">
-      <SidebarButton
-        text={t('Login')}
-        icon={<IconUser size={18} />}
-        onClick={() => setIsLoginDialog(true)}
-      />
+      {status === 'authenticated' ? (
+        <SidebarButton
+          text={session.user?.email ?? t('Logout')}
+          icon={<IconUser size={18} />}
+          onClick={() => setIsLogoutDialog(true)}
+        />
+      ) : (
+        <SidebarButton
+          text={t('Login')}
+          icon={<IconUser size={18} />}
+          onClick={() => setIsLoginDialog(true)}
+        />
+      )}
 
       {conversations.length > 0 ? (
         <ClearConversations onClearConversations={handleClearConversations} />
@@ -82,6 +100,14 @@ export const ChatbarSettings = () => {
         onClose={() => {
           setIsLoginDialog(false);
         }}
+      />
+
+      <LogoutDialog
+        open={isLogoutDialogOpen}
+        onClose={() => {
+          setIsLogoutDialog(false);
+        }}
+        userEmail={session?.user?.email}
       />
     </div>
   );

@@ -10,6 +10,10 @@ export const authOptions: NextAuthOptions = {
   // This type assertion is needed to prevent a type error - https://github.com/nextauthjs/next-auth/issues/6106#issuecomment-1582582312
   // This is probably a bug since both packages are from NextAuth
   adapter: PrismaAdapter(prisma) as Adapter,
+  // The secret should be set to a reasonably long random string.
+  // It is used to sign cookies and to sign and encrypt JSON Web Tokens, unless
+  // a separate secret is defined explicitly for encrypting the JWT.
+  secret: process.env.NEXTAUTH_SECRET,
   session: {
     // Use JSON Web Tokens for session instead of database sessions.
     // This option can be used with or without a database for users/accounts.

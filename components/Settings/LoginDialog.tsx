@@ -3,16 +3,12 @@ import { FC, MouseEventHandler, useContext, useState } from 'react';
 
 import { useTranslation } from 'next-i18next';
 
-import { useCreateReducer } from '@/hooks/useCreateReducer';
-
-import { getSettings, saveSettings } from '@/utils/app/settings';
-
 import { SignUpBody } from '@/types/auth';
-import { Settings } from '@/types/settings';
 
 import HomeContext from '@/pages/api/home/home.context';
 
 import Dialog from '../Dialog';
+import Spinner from '../Spinner';
 import TextField from '../TextField';
 
 interface Props {
@@ -21,11 +17,8 @@ interface Props {
 }
 
 export const LoginDialog: FC<Props> = ({ open, onClose }) => {
+  // TODO add login.json to /public/locales and translate the phrases below
   const { t } = useTranslation('login');
-  const settings: Settings = getSettings();
-  const { state, dispatch } = useCreateReducer<Settings>({
-    initialState: settings,
-  });
   const { dispatch: homeDispatch } = useContext(HomeContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -182,7 +175,9 @@ export const LoginDialog: FC<Props> = ({ open, onClose }) => {
           disabled={isProcessing}
           onClick={handleLogin}
         >
-          {t(variant)}
+          <div className="flex justify-center items-center h-5">
+            {isProcessing ? <Spinner /> : t(variant)}
+          </div>
         </button>
         <p className="text-rose-500 mt-4 text-sm text-center">
           {t(generalError)}

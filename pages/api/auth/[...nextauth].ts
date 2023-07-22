@@ -10,6 +10,32 @@ export const authOptions: NextAuthOptions = {
   // This type assertion is needed to prevent a type error - https://github.com/nextauthjs/next-auth/issues/6106#issuecomment-1582582312
   // This is probably a bug since both packages are from NextAuth
   adapter: PrismaAdapter(prisma) as Adapter,
+  // Callbacks are asynchronous functions you can use to control what happens
+  // when an action is performed.
+  // https://next-auth.js.org/configuration/callbacks
+  callbacks: {
+    // If we want info on token to be accessible to client, we need to add it to
+    // session here.
+    async session({ session, user, token }) {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: token.id,
+        },
+      };
+    },
+    // Add additional info to JWT
+    async jwt({ token, user }) {
+      // User is only defined on signin/signup
+      if (!user) return token;
+
+      return {
+        ...token,
+        id: user.id,
+      };
+    },
+  },
   // The secret should be set to a reasonably long random string.
   // It is used to sign cookies and to sign and encrypt JSON Web Tokens, unless
   // a separate secret is defined explicitly for encrypting the JWT.

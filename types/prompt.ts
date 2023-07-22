@@ -8,3 +8,16 @@ export interface Prompt {
   model: OpenAIModel;
   folderId: string | null;
 }
+
+export interface GetPromptBody {
+  id: string;
+}
+
+export interface PromptDatabase {
+  id: string;
+  name: string;
+  description: string;
+  content: string;
+  modelId: String;
+  folderId: string | null;
+}

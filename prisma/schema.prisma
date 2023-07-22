@@ -6,18 +6,18 @@ generator client {
 }
 
 datasource db {
-  provider          = "postgresql"
-  url               = env("POSTGRES_PRISMA_URL") // uses connection pooling
-  directUrl         = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
-  shadowDatabaseUrl = env("POSTGRES_URL_NON_POOLING") // used for migrations
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
 }
 
 model Conversation {
-  id          String    @id @default(cuid())
+  id          String    @id @default(uuid())
   archived    Boolean   @default(false)
   createdAt   DateTime  @default(now()) @map(name: "created_at")
   folderId    String?   @map(name: "folder_id")
   name        String
+  modelId     String    @map(name: "model_id")
   prompt      String
   temperature Int
   userId      String    @map(name: "user_id")
@@ -29,7 +29,7 @@ model Conversation {
 }
 
 model Message {
-  id             String       @id @default(cuid())
+  id             String       @id @default(uuid())
   archived       Boolean      @default(false)
   createdAt      DateTime     @default(now()) @map(name: "created_at")
   content        String
@@ -44,13 +44,14 @@ model Message {
 }
 
 model Prompt {
-  id          String   @id @default(cuid())
+  id          String   @id @default(uuid())
   archived    Boolean  @default(false)
   createdAt   DateTime @default(now()) @map(name: "created_at")
   content     String
   description String
   folderId    String?  @map(name: "folder_id")
   name        String
+  modelId     String   @map(name: "model_id")
   userId      String   @map(name: "user_id")
   updatedAt   DateTime @updatedAt @map(name: "updated_at")
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -59,7 +60,7 @@ model Prompt {
 }
 
 model User {
-  id            String         @id @default(cuid())
+  id            String         @id @default(uuid())
   archived      Boolean        @default(false)
   createdAt     DateTime       @default(now()) @map(name: "created_at")
   email         String         @unique

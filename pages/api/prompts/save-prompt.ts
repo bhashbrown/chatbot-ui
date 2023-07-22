@@ -11,6 +11,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
     const {
       id: promptId,
+      archived,
       name,
       description,
       content,
@@ -43,6 +44,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     const promptData = {
       id: promptId,
+      archived,
       name,
       description,
       content,

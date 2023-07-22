@@ -23,7 +23,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     }
 
     const prompts = await prisma.prompt.findMany({
-      where: { userId: user.id },
+      where: { userId: user.id, archived: false },
     });
 
     return res.status(201).send({ prompts });

@@ -150,7 +150,7 @@ const Home = ({
     dispatch({ field: 'conversations', value: updatedConversations });
     saveConversations(updatedConversations);
 
-    // TODO updateMany prompts in a `delete-folder` api
+    // TODO add updateMany prompts in a `delete-folder` api
     const updatedPrompts: Prompt[] = prompts.map((p) => {
       if (p.folderId === folderId) {
         return {

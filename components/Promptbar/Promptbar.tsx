@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { useCreateReducer } from '@/hooks/useCreateReducer';
 
-import { savePrompt, savePrompts } from '@/utils/app/prompts';
+import { savePrompt } from '@/utils/app/prompts';
 
 import { OpenAIModels } from '@/types/openai';
 import { Prompt } from '@/types/prompt';
@@ -59,15 +59,14 @@ const Promptbar = () => {
       homeDispatch({ field: 'prompts', value: updatedPrompts });
 
       await savePrompt(newPrompt);
-      savePrompts(updatedPrompts);
     }
   };
 
-  const handleDeletePrompt = (prompt: Prompt) => {
+  const handleDeletePrompt = async (prompt: Prompt) => {
     const updatedPrompts = prompts.filter((p) => p.id !== prompt.id);
 
     homeDispatch({ field: 'prompts', value: updatedPrompts });
-    savePrompts(updatedPrompts);
+    await savePrompt({ ...prompt, archived: true });
   };
 
   const handleUpdatePrompt = async (prompt: Prompt) => {
@@ -81,7 +80,6 @@ const Promptbar = () => {
     homeDispatch({ field: 'prompts', value: updatedPrompts });
 
     await savePrompt(prompt);
-    savePrompts(updatedPrompts);
   };
 
   const handleDrop = (e: any) => {

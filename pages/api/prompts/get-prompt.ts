@@ -18,19 +18,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     }
 
     const session = await getServerSession(req, res, authOptions);
-    const email = session?.user?.email;
+    const userId = session?.user?.id;
 
-    if (!email) {
+    if (!userId) {
       return res.status(400).send({
         statusText: 'error: User must be logged in to fetch prompt.',
-      });
-    }
-
-    const user = await prisma.user.findFirst({ where: { email } });
-
-    if (!user) {
-      return res.status(400).send({
-        statusText: 'error: User does not exist in the database.',
       });
     }
 

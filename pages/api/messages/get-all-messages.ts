@@ -2,7 +2,6 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth';
 
 import { Conversation } from '@/types/chat';
-import { Prompt } from '@/types/prompt';
 
 import { authOptions } from '../auth/[...nextauth]';
 
@@ -10,15 +9,7 @@ import prisma from '@/prisma/prisma';
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
-    const {
-      id: conversationId,
-      archived,
-      name,
-      model,
-      prompt,
-      temperature,
-      folderId,
-    } = (await req.body) as Conversation;
+    const { id: conversationId } = (await req.body) as Conversation;
 
     if (!conversationId) {
       return res.status(400).send({
@@ -31,28 +22,15 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     if (!userId) {
       return res.status(400).send({
-        statusText: 'error: User must be logged in to save conversation.',
+        statusText: 'error: User must be logged in to fetch messages.',
       });
     }
 
-    const conversationData = {
-      id: conversationId,
-      archived,
-      name,
-      modelId: model.id,
-      prompt,
-      temperature,
-      folderId,
-      userId,
-    };
-
-    const updatedConversation = await prisma.conversation.upsert({
-      where: { id: conversationId },
-      create: conversationData,
-      update: conversationData,
+    const messages = await prisma.message.findMany({
+      where: { conversationId, archived: false, userId },
     });
 
-    return res.status(201).send({ conversation: updatedConversation });
+    return res.status(201).send({ messages });
   } catch (error) {
     console.error(error);
     return res.status(500).send({ error: error });

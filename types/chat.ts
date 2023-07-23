@@ -5,6 +5,12 @@ export interface Message {
   content: string;
 }
 
+export interface CreateMessageBody {
+  conversationId: string;
+  role: Role;
+  content: string;
+}
+
 export type Role = 'assistant' | 'user';
 
 export interface ChatBody {

@@ -5,7 +5,11 @@ import { useTranslation } from 'next-i18next';
 import { useCreateReducer } from '@/hooks/useCreateReducer';
 
 import { DEFAULT_SYSTEM_PROMPT, DEFAULT_TEMPERATURE } from '@/utils/app/const';
-import { saveConversation, saveConversations } from '@/utils/app/conversation';
+import {
+  saveConversation,
+  saveConversations,
+  updateConversationDB,
+} from '@/utils/app/conversation';
 import { saveFolders } from '@/utils/app/folders';
 import { exportData, importData } from '@/utils/app/importExport';
 
@@ -137,10 +141,11 @@ export const Chatbar = () => {
     saveFolders(updatedFolders);
   };
 
-  const handleDeleteConversation = (conversation: Conversation) => {
+  const handleDeleteConversation = async (conversation: Conversation) => {
     const updatedConversations = conversations.filter(
       (c) => c.id !== conversation.id,
     );
+    await updateConversationDB({ ...conversation, archived: true });
 
     homeDispatch({ field: 'conversations', value: updatedConversations });
     chatDispatch({ field: 'searchTerm', value: '' });

@@ -1,5 +1,7 @@
 import { Conversation } from '@/types/chat';
 
+import { API_LINKS, sendPostRequest } from './api';
+
 export const updateConversation = (
   updatedConversation: Conversation,
   allConversations: Conversation[],
@@ -27,4 +29,32 @@ export const saveConversation = (conversation: Conversation) => {
 
 export const saveConversations = (conversations: Conversation[]) => {
   localStorage.setItem('conversationHistory', JSON.stringify(conversations));
+};
+
+export const createConversation = async (conversation: Conversation) => {
+  return sendPostRequest({
+    endPoint: API_LINKS.conversationCreate,
+    data: conversation,
+  });
+};
+
+export const updateConversationDB = async (conversation: Conversation) => {
+  return sendPostRequest({
+    endPoint: API_LINKS.conversationUpdate,
+    data: conversation,
+  });
+};
+
+export const getConversation = async (conversationId: string) => {
+  return sendPostRequest({
+    endPoint: API_LINKS.conversationGet,
+    data: { id: conversationId },
+  });
+};
+
+export const getAllConversations = async (userId: string) => {
+  return sendPostRequest({
+    endPoint: API_LINKS.conversationGetAll,
+    data: { id: userId },
+  });
 };

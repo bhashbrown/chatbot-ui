@@ -24,4 +24,4 @@ export const savePrompts = (prompts: Prompt[]) => {
 };
 
 export const savePrompt = async (prompt: Prompt) =>
-  sendPostRequest({ endPoint: API_LINKS.promptSave, data: prompt });
+  sendPostRequest({ endPoint: API_LINKS.promptUpdate, data: prompt });

@@ -45,13 +45,6 @@ export const updateConversationDB = async (conversation: Conversation) => {
   });
 };
 
-export const getConversation = async (conversationId: string) => {
-  return sendPostRequest({
-    endPoint: API_LINKS.conversationGet,
-    data: { id: conversationId },
-  });
-};
-
 export const getAllConversations = async (userId: string) => {
   return sendPostRequest({
     endPoint: API_LINKS.conversationGetAll,

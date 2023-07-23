@@ -1,4 +1,9 @@
-import { Conversation, GetConversationBody } from '@/types/chat';
+import {
+  Conversation,
+  CreateMessageBody,
+  GetConversationBody,
+  Message,
+} from '@/types/chat';
 import { Plugin, PluginID } from '@/types/plugin';
 import { GetPromptBody, Prompt } from '@/types/prompt';
 
@@ -15,19 +20,27 @@ export const getEndpoint = (plugin: Plugin | null) => {
 };
 
 export const API_LINKS = {
-  promptGet: '/api/prompts/get-prompt',
-  promptGetAll: '/api/prompts/get-all-prompts',
-  promptSave: '/api/prompts/save-prompt',
   conversationCreate: '/api/conversations/create-conversation',
   conversationGet: '/api/conversations/get-conversation',
   conversationGetAll: '/api/conversations/get-all-conversations',
   conversationUpdate: '/api/conversations/update-conversation',
+  messageCreate: '/api/messages/create-message',
+  messageGetAll: '/api/messages/get-all-messages',
+  promptGet: '/api/prompts/get-prompt',
+  promptGetAll: '/api/prompts/get-all-prompts',
+  promptSave: '/api/prompts/save-prompt',
 };
 type APILinks = typeof API_LINKS;
 type APILink = APILinks[keyof APILinks];
 type PostRequestInput = {
   endPoint: APILink;
-  data: Conversation | Prompt | GetConversationBody | GetPromptBody;
+  data:
+    | Conversation
+    | Prompt
+    | GetConversationBody
+    | GetPromptBody
+    | Message
+    | CreateMessageBody;
 };
 
 export const sendPostRequest = async ({ endPoint, data }: PostRequestInput) => {
@@ -39,8 +52,6 @@ export const sendPostRequest = async ({ endPoint, data }: PostRequestInput) => {
       },
       body: JSON.stringify(data),
     }).then((response) => response.json());
-
-    console.log(`RESPONSE - ${endPoint}`, response);
 
     return response;
   } catch (error) {

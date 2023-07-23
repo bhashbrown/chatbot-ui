@@ -1,4 +1,4 @@
-import { Conversation } from '@/types/chat';
+import { Conversation, Message } from '@/types/chat';
 
 import { API_LINKS, sendPostRequest } from './api';
 
@@ -56,5 +56,22 @@ export const getAllConversations = async (userId: string) => {
   return sendPostRequest({
     endPoint: API_LINKS.conversationGetAll,
     data: { id: userId },
+  });
+};
+
+export const createMessage = async (
+  conversation: Conversation,
+  message: Message,
+) => {
+  return sendPostRequest({
+    endPoint: API_LINKS.messageCreate,
+    data: { ...message, conversationId: conversation.id },
+  });
+};
+
+export const getAllMessages = async (conversation: Conversation) => {
+  return sendPostRequest({
+    endPoint: API_LINKS.messageGetAll,
+    data: conversation,
   });
 };

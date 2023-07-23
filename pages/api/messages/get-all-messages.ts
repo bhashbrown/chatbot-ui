@@ -30,7 +30,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       where: { conversationId, archived: false, userId },
     });
 
-    return res.status(201).send({ messages });
+    return res.status(201).send({ messages: messages ?? [] });
   } catch (error) {
     console.error(error);
     return res.status(500).send({ error: error });

@@ -435,7 +435,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   // if user is logged in, then fetch their prompts from the database
   if (session?.user?.id) {
     const promptsResponse: { prompts: PromptDatabase[] } = await fetch(
-      `${root}/${API_LINKS.promptGetAll}`,
+      `${root}${API_LINKS.promptGetAll}`,
       {
         method: 'POST',
         headers: {

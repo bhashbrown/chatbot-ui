@@ -14,9 +14,9 @@ import { useTranslation } from 'next-i18next';
 
 import { getEndpoint } from '@/utils/app/api';
 import {
-  saveConversation,
-  saveConversations,
+  createMessage,
   updateConversation,
+  updateConversationDB,
 } from '@/utils/app/conversation';
 import { throttle } from '@/utils/data/throttle';
 
@@ -29,10 +29,10 @@ import Spinner from '../Spinner';
 import { ChatInput } from './ChatInput';
 import { ChatLoader } from './ChatLoader';
 import { ErrorMessageDiv } from './ErrorMessageDiv';
+import { MemoizedChatMessage } from './MemoizedChatMessage';
 import { ModelSelect } from './ModelSelect';
 import { SystemPrompt } from './SystemPrompt';
 import { TemperatureSlider } from './Temperature';
-import { MemoizedChatMessage } from './MemoizedChatMessage';
 
 interface Props {
   stopConversationRef: MutableRefObject<boolean>;
@@ -67,6 +67,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const updateDatabase = useRef(throttle(updateConversationDB, 1000)).current;
 
   const handleSend = useCallback(
     async (message: Message, deleteCount = 0, plugin: Plugin | null = null) => {
@@ -81,11 +82,15 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
             ...selectedConversation,
             messages: [...updatedMessages, message],
           };
+          await updateConversationDB(selectedConversation);
+          await createMessage(selectedConversation, message);
         } else {
           updatedConversation = {
             ...selectedConversation,
             messages: [...selectedConversation.messages, message],
           };
+          await updateConversationDB(selectedConversation);
+          await createMessage(selectedConversation, message);
         }
         homeDispatch({
           field: 'selectedConversation',
@@ -145,6 +150,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
               ...updatedConversation,
               name: customName,
             };
+            await updateConversationDB(updatedConversation);
           }
           homeDispatch({ field: 'loading', value: false });
           const reader = data.getReader();
@@ -164,9 +170,13 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
             text += chunkValue;
             if (isFirst) {
               isFirst = false;
+              const newMessage: Message = {
+                role: 'assistant',
+                content: chunkValue,
+              };
               const updatedMessages: Message[] = [
                 ...updatedConversation.messages,
-                { role: 'assistant', content: chunkValue },
+                newMessage,
               ];
               updatedConversation = {
                 ...updatedConversation,
@@ -197,7 +207,12 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
               });
             }
           }
-          saveConversation(updatedConversation);
+          await createMessage(
+            updatedConversation,
+            updatedConversation.messages[
+              updatedConversation.messages.length - 1
+            ],
+          );
           const updatedConversations: Conversation[] = conversations.map(
             (conversation) => {
               if (conversation.id === selectedConversation.id) {
@@ -206,18 +221,23 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
               return conversation;
             },
           );
-          if (updatedConversations.length === 0) {
+          if (
+            !updatedConversations.find(
+              (conversation) => conversation.id === updatedConversation.id,
+            )
+          ) {
             updatedConversations.push(updatedConversation);
           }
           homeDispatch({ field: 'conversations', value: updatedConversations });
-          saveConversations(updatedConversations);
           homeDispatch({ field: 'messageIsStreaming', value: false });
         } else {
           const { answer } = await response.json();
+          const newMessage: Message = { role: 'assistant', content: answer };
           const updatedMessages: Message[] = [
             ...updatedConversation.messages,
-            { role: 'assistant', content: answer },
+            newMessage,
           ];
+          await createMessage(updatedConversation, newMessage);
           updatedConversation = {
             ...updatedConversation,
             messages: updatedMessages,
@@ -226,7 +246,6 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
             field: 'selectedConversation',
             value: updateConversation,
           });
-          saveConversation(updatedConversation);
           const updatedConversations: Conversation[] = conversations.map(
             (conversation) => {
               if (conversation.id === selectedConversation.id) {
@@ -239,7 +258,6 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
             updatedConversations.push(updatedConversation);
           }
           homeDispatch({ field: 'conversations', value: updatedConversations });
-          saveConversations(updatedConversations);
           homeDispatch({ field: 'loading', value: false });
           homeDispatch({ field: 'messageIsStreaming', value: false });
         }
@@ -416,22 +434,27 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
                       <SystemPrompt
                         conversation={selectedConversation}
                         prompts={prompts}
-                        onChangePrompt={(prompt) =>
+                        onChangePrompt={(prompt) => {
                           handleUpdateConversation(selectedConversation, {
                             key: 'prompt',
                             value: prompt,
-                          })
-                        }
+                          });
+                          updateDatabase({ ...selectedConversation, prompt });
+                        }}
                       />
 
                       <TemperatureSlider
                         label={t('Temperature')}
-                        onChangeTemperature={(temperature) =>
+                        onChangeTemperature={(temperature) => {
                           handleUpdateConversation(selectedConversation, {
                             key: 'temperature',
                             value: temperature,
-                          })
-                        }
+                          });
+                          updateDatabase({
+                            ...selectedConversation,
+                            temperature,
+                          });
+                        }}
                       />
                     </div>
                   )}

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
 
 import { GetServerSideProps } from 'next';
-import { Session, getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
@@ -19,9 +19,7 @@ import {
 } from '@/utils/app/clean';
 import { DEFAULT_SYSTEM_PROMPT, DEFAULT_TEMPERATURE } from '@/utils/app/const';
 import {
-  createConversation,
-  saveConversation,
-  saveConversations,
+  getAllMessages,
   updateConversation,
   updateConversationDB,
 } from '@/utils/app/conversation';
@@ -49,9 +47,9 @@ import { v4 as uuidv4 } from 'uuid';
 interface Props {
   serverSideApiKeyIsSet: boolean;
   serverSidePluginKeysSet: boolean;
-  conversations: Conversation[] | null | undefined;
+  conversations: Conversation[] | null;
   defaultModelId: OpenAIModelID;
-  prompts: Prompt[] | null | undefined;
+  prompts: Prompt[] | null;
 }
 
 const Home = ({
@@ -110,13 +108,13 @@ const Home = ({
 
   // FETCH MODELS ----------------------------------------------
 
-  const handleSelectConversation = (conversation: Conversation) => {
+  const handleSelectConversation = async (conversation: Conversation) => {
+    const { messages } = await getAllMessages(conversation);
+    const updatedConversation = { ...conversation, messages };
     dispatch({
       field: 'selectedConversation',
-      value: conversation,
+      value: updatedConversation,
     });
-
-    saveConversation(conversation);
   };
 
   // FOLDER OPERATIONS  --------------------------------------------
@@ -151,7 +149,6 @@ const Home = ({
     });
 
     dispatch({ field: 'conversations', value: updatedConversations });
-    saveConversations(updatedConversations);
 
     // TODO add updateMany prompts in a `delete-folder` api
     const updatedPrompts: Prompt[] = prompts.map((p) => {
@@ -211,9 +208,7 @@ const Home = ({
     dispatch({ field: 'selectedConversation', value: newConversation });
     dispatch({ field: 'conversations', value: updatedConversations });
 
-    await createConversation(newConversation);
-    saveConversation(newConversation);
-    saveConversations(updatedConversations);
+    await updateConversationDB(newConversation);
 
     dispatch({ field: 'loading', value: false });
   };
@@ -231,7 +226,6 @@ const Home = ({
       updatedConversation,
       conversations,
     );
-    await updateConversationDB(updatedConversation);
 
     dispatch({ field: 'selectedConversation', value: single });
     dispatch({ field: 'conversations', value: all });
@@ -450,7 +444,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       },
     ).then((response) => response.json());
 
-    prompts = promptsResponse.prompts.map((prompt) => ({
+    prompts = promptsResponse.prompts?.map((prompt) => ({
       ...prompt,
       // match modelId with correct model before defining prompts
       model: OpenAIModels[prompt.modelId as OpenAIModelID],
@@ -468,19 +462,22 @@ export const getServerSideProps: GetServerSideProps = async ({
         },
       ).then((response) => response.json());
 
-    conversations = conversationsResponse.conversations.map((conversation) => ({
-      ...conversation,
-      model: OpenAIModels[conversation.modelId as OpenAIModelID],
-    }));
+    conversations = conversationsResponse.conversations?.map(
+      (conversation) => ({
+        ...conversation,
+        model: OpenAIModels[conversation.modelId as OpenAIModelID],
+        messages: [],
+      }),
+    );
   }
 
   return {
     props: {
       serverSideApiKeyIsSet: !!process.env.OPENAI_API_KEY,
-      conversations,
+      conversations: conversations ?? null,
       defaultModelId,
       serverSidePluginKeysSet,
-      prompts,
+      prompts: prompts ?? null,
       ...(await serverSideTranslations(locale ?? 'en', [
         'common',
         'chat',

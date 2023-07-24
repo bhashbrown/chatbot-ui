@@ -5,11 +5,7 @@ import { useTranslation } from 'next-i18next';
 import { useCreateReducer } from '@/hooks/useCreateReducer';
 
 import { DEFAULT_SYSTEM_PROMPT, DEFAULT_TEMPERATURE } from '@/utils/app/const';
-import {
-  saveConversation,
-  saveConversations,
-  updateConversationDB,
-} from '@/utils/app/conversation';
+import { getAllMessages, updateConversationDB } from '@/utils/app/conversation';
 import { saveFolders } from '@/utils/app/folders';
 import { exportData, importData } from '@/utils/app/importExport';
 
@@ -149,15 +145,17 @@ export const Chatbar = () => {
 
     homeDispatch({ field: 'conversations', value: updatedConversations });
     chatDispatch({ field: 'searchTerm', value: '' });
-    saveConversations(updatedConversations);
 
     if (updatedConversations.length > 0) {
+      const nextConversation =
+        updatedConversations[updatedConversations.length - 1];
+      const { messages } = await getAllMessages(nextConversation);
+      const nextConversationMessages = { ...nextConversation, messages };
+
       homeDispatch({
         field: 'selectedConversation',
-        value: updatedConversations[updatedConversations.length - 1],
+        value: nextConversationMessages,
       });
-
-      saveConversation(updatedConversations[updatedConversations.length - 1]);
     } else {
       defaultModelId &&
         homeDispatch({

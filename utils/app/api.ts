@@ -20,7 +20,6 @@ export const getEndpoint = (plugin: Plugin | null) => {
 };
 
 export const API_LINKS = {
-  conversationCreate: '/api/conversations/create-conversation',
   conversationGetAll: '/api/conversations/get-all-conversations',
   conversationUpdate: '/api/conversations/update-conversation',
   messageCreate: '/api/messages/create-message',

@@ -20,12 +20,12 @@ export const getEndpoint = (plugin: Plugin | null) => {
 };
 
 export const API_LINKS = {
-  conversationGetAll: '/api/conversations/get-all-conversations',
-  conversationUpdate: '/api/conversations/update-conversation',
-  messageCreate: '/api/messages/create-message',
-  messageGetAll: '/api/messages/get-all-messages',
-  promptGetAll: '/api/prompts/get-all-prompts',
-  promptUpdate: '/api/prompts/update-prompt',
+  conversationGetAll: 'api/conversations/get-all-conversations',
+  conversationUpdate: 'api/conversations/update-conversation',
+  messageCreate: 'api/messages/create-message',
+  messageGetAll: 'api/messages/get-all-messages',
+  promptGetAll: 'api/prompts/get-all-prompts',
+  promptUpdate: 'api/prompts/update-prompt',
 };
 type APILinks = typeof API_LINKS;
 type APILink = APILinks[keyof APILinks];

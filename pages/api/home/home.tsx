@@ -431,7 +431,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   const session = await getServerSession(req, res, authOptions);
   let prompts = null;
   let conversations = null;
-  const root = process.env.VERCEL_URL ?? process.env.NEXTAUTH_URL;
+  const root = process.env.NEXTAUTH_URL ?? process.env.VERCEL_URL;
   // if user is logged in, then fetch their prompts from the database
   if (session?.user?.id) {
     const promptsResponse: { prompts: PromptDatabase[] } = await fetch(

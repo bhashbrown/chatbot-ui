@@ -431,7 +431,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   const session = await getServerSession(req, res, authOptions);
   let prompts = null;
   let conversations = null;
-  const root = process.env.NEXTAUTH_URL ?? process.env.VERCEL_URL;
+  const root = process.env.NEXTAUTH_URL ?? `https://${process.env.VERCEL_URL}`;
   // if user is logged in, then fetch their prompts from the database
   if (session?.user?.id) {
     const promptsResponse: { prompts: PromptDatabase[] } = await fetch(
@@ -447,14 +447,14 @@ export const getServerSideProps: GetServerSideProps = async ({
       .then((response) => response.json())
       .catch((error) => console.error(error));
 
-    prompts = promptsResponse.prompts?.map((prompt) => ({
+    prompts = promptsResponse?.prompts?.map((prompt) => ({
       ...prompt,
       // match modelId with correct model before defining prompts
       model: OpenAIModels[prompt.modelId as OpenAIModelID],
     }));
 
     const conversationsResponse: { conversations: ConversationDatabase[] } =
-      await fetch(`${root}/${API_LINKS.conversationGetAll}`, {
+      await fetch(`${root}${API_LINKS.conversationGetAll}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -464,7 +464,7 @@ export const getServerSideProps: GetServerSideProps = async ({
         .then((response) => response.json())
         .catch((error) => console.error(error));
 
-    conversations = conversationsResponse.conversations?.map(
+    conversations = conversationsResponse?.conversations?.map(
       (conversation) => ({
         ...conversation,
         model: OpenAIModels[conversation.modelId as OpenAIModelID],

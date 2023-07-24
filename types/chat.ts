@@ -5,6 +5,12 @@ export interface Message {
   content: string;
 }
 
+export interface CreateMessageBody {
+  conversationId: string;
+  role: Role;
+  content: string;
+}
+
 export type Role = 'assistant' | 'user';
 
 export interface ChatBody {
@@ -17,10 +23,26 @@ export interface ChatBody {
 
 export interface Conversation {
   id: string;
+  archived?: boolean;
   name: string;
   messages: Message[];
   model: OpenAIModel;
   prompt: string;
   temperature: number;
   folderId: string | null;
+}
+
+export interface ConversationDatabase {
+  id: string;
+  archived?: boolean;
+  name: string;
+  modelId: string;
+  prompt: string;
+  temperature: number;
+  folderId: string | null;
+  updatedAt: string;
+}
+
+export interface GetConversationBody {
+  id: string;
 }

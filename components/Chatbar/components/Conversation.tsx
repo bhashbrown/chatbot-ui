@@ -14,6 +14,8 @@ import {
   useState,
 } from 'react';
 
+import { updateConversationDB } from '@/utils/app/conversation';
+
 import { Conversation } from '@/types/chat';
 
 import HomeContext from '@/pages/api/home/home.context';
@@ -54,12 +56,13 @@ export const ConversationComponent = ({ conversation }: Props) => {
     }
   };
 
-  const handleRename = (conversation: Conversation) => {
+  const handleRename = async (conversation: Conversation) => {
     if (renameValue.trim().length > 0) {
       handleUpdateConversation(conversation, {
         key: 'name',
         value: renameValue,
       });
+      await updateConversationDB({ ...conversation, name: renameValue });
       setRenameValue('');
       setIsRenaming(false);
     }

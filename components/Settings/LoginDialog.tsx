@@ -89,7 +89,7 @@ export const LoginDialog: FC<Props> = ({ open, onClose }) => {
 
       // login using credentials
       const signInResponse = await signIn('credentials', {
-        redirect: false,
+        redirect: true,
         email,
         password,
       });

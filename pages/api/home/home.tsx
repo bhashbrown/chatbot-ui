@@ -431,10 +431,11 @@ export const getServerSideProps: GetServerSideProps = async ({
   const session = await getServerSession(req, res, authOptions);
   let prompts = null;
   let conversations = null;
+  const root = process.env.NEXTAUTH_URL ?? `https://${process.env.VERCEL_URL}`;
   // if user is logged in, then fetch their prompts from the database
   if (session?.user?.id) {
     const promptsResponse: { prompts: PromptDatabase[] } = await fetch(
-      `${process.env.NEXTAUTH_URL}/${API_LINKS.promptGetAll}`,
+      `${root}/${API_LINKS.promptGetAll}`,
       {
         method: 'POST',
         headers: {
@@ -442,27 +443,28 @@ export const getServerSideProps: GetServerSideProps = async ({
         },
         body: JSON.stringify({ id: session.user.id }),
       },
-    ).then((response) => response.json());
+    )
+      .then((response) => response.json())
+      .catch((error) => console.error(error));
 
-    prompts = promptsResponse.prompts?.map((prompt) => ({
+    prompts = promptsResponse?.prompts?.map((prompt) => ({
       ...prompt,
       // match modelId with correct model before defining prompts
       model: OpenAIModels[prompt.modelId as OpenAIModelID],
     }));
 
     const conversationsResponse: { conversations: ConversationDatabase[] } =
-      await fetch(
-        `${process.env.NEXTAUTH_URL}/${API_LINKS.conversationGetAll}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ id: session.user.id }),
+      await fetch(`${root}${API_LINKS.conversationGetAll}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      ).then((response) => response.json());
+        body: JSON.stringify({ id: session.user.id }),
+      })
+        .then((response) => response.json())
+        .catch((error) => console.error(error));
 
-    conversations = conversationsResponse.conversations?.map(
+    conversations = conversationsResponse?.conversations?.map(
       (conversation) => ({
         ...conversation,
         model: OpenAIModels[conversation.modelId as OpenAIModelID],
